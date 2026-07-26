@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BusGo Admin</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* ============ ADMIN LOGIN ============ */
+.admin-login-wrap{display:flex;flex-direction:column;align-items:center;padding:1.2rem 0 0.8rem;gap:0;}
+.admin-login-brand{display:flex;flex-direction:column;align-items:center;margin-bottom:1.4rem;}
+.admin-login-icon{width:72px;height:72px;background:linear-gradient(145deg,var(--ink) 0%,#2a3f6a 100%);border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:0.75rem;box-shadow:0 8px 24px rgba(22,33,62,0.25),0 2px 6px rgba(22,33,62,0.12);}
+.admin-login-brand .h1{font-family:var(--display);font-weight:700;font-size:1.45rem;text-align:center;margin:0 0 0.2rem;}
+.admin-login-brand .sub{text-align:center;max-width:240px;font-size:0.85rem;color:var(--graphite);margin:0;}
+.admin-login-card{width:100%;background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:1.5rem 1.4rem 1.3rem;position:relative;box-shadow:0 4px 20px rgba(22,33,62,0.06);}
+.admin-login-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--amber) 0%,var(--teal) 50%,var(--ink) 100%);border-radius:18px 18px 0 0;}
+.admin-login-card .field input{border-radius:10px;padding:0.72rem 0.85rem;border:1.5px solid var(--line);background:#faf8f4;transition:border .15s,box-shadow .15s;font-size:0.95rem;}
+.admin-login-card .field input:focus{border-color:var(--ink);background:#fff;box-shadow:0 0 0 3px rgba(22,33,62,0.08);outline:none;}
+.admin-login-card .field input::placeholder{color:#b0a99a;}
+.admin-login-card .btn-ink{background:var(--ink);color:var(--paper);padding:0.8rem;border-radius:11px;font-weight:600;font-size:0.95rem;border:none;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:0.45rem;transition:background .12s,transform .05s;letter-spacing:0.01em;}
+.admin-login-card .btn-ink:hover{background:var(--ink-2);}
+.admin-login-card .btn-ink:active{transform:scale(0.98);}
+.demo-note{width:100%;text-align:center;font-size:0.72rem;color:var(--graphite);margin-top:0.9rem;padding:0.55rem 0.8rem;background:#f5f2eb;border-radius:10px;border:1px solid var(--line);line-height:1.5;}
+.demo-note b{color:var(--ink);}
+
+/* ============ ADMIN DASHBOARD ============ */
+.admin-hero{background:linear-gradient(135deg,#0f1729 0%,#16213e 60%,#1a2a4a 100%);border-radius:20px;padding:1.5rem 1.4rem 1.3rem;margin-bottom:1.3rem;color:var(--paper);position:relative;overflow:hidden;box-shadow:0 6px 24px rgba(22,33,62,0.18);}
+.admin-hero::before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(232,169,58,0.07);}
+.admin-hero::after{content:"⚙";position:absolute;right:14px;bottom:4px;font-size:4rem;opacity:0.08;line-height:1;}
+.admin-hero .greet{font-family:var(--display);font-weight:700;font-size:1.2rem;margin-bottom:0.2rem;}
+.admin-hero .hero-sub{color:rgba(200,210,235,0.7);font-size:0.8rem;margin-bottom:1.1rem;}
+.admin-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+.admin-stat{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:0.85rem 1rem;backdrop-filter:blur(4px);}
+.admin-stat .num{font-family:var(--display);font-weight:700;font-size:1.35rem;color:var(--amber);line-height:1;}
+.admin-stat .lbl{font-size:0.65rem;color:rgba(200,210,235,0.6);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.25rem;}
+.admin-tabs{display:flex;gap:0.35rem;margin-bottom:1.2rem;overflow-x:auto;padding:0.15rem 0;scrollbar-width:none;}
+.admin-tabs::-webkit-scrollbar{display:none;}
+.admin-tabs button{flex:0 0 auto;padding:0.48rem 1rem;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--graphite);font-weight:600;font-size:0.8rem;cursor:pointer;white-space:nowrap;transition:all .12s;}
+.admin-tabs button:hover{border-color:var(--amber);color:var(--ink);background:#fffbf2;}
+.admin-tabs button.active{background:var(--ink);border-color:var(--ink);color:var(--paper);box-shadow:0 2px 10px rgba(22,33,62,0.18);}
+.admin-tabs button .badge{background:var(--rust);color:#fff;font-size:0.6rem;padding:0.1rem 0.4rem;border-radius:99px;margin-left:0.3rem;font-family:var(--mono);vertical-align:middle;}
+.create-card{background:linear-gradient(160deg,#faf8f3 0%,#fff 100%);border:1.5px solid var(--line);border-radius:16px;padding:1.2rem 1.2rem 1rem;margin-bottom:1rem;}
+.create-card .ttl{font-family:var(--display);font-weight:700;font-size:0.95rem;margin-bottom:0.7rem;display:flex;align-items:center;gap:0.4rem;color:var(--ink);}
+.driver-card{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:0.9rem 1rem;margin-bottom:0.6rem;transition:border-color .1s,box-shadow .1s;}
+.driver-card:hover{border-color:var(--amber);box-shadow:0 2px 10px rgba(232,169,58,0.1);}
+.driver-card .row1{display:flex;justify-content:space-between;align-items:center;}
+.driver-card .name{font-weight:600;font-size:0.92rem;}
+.driver-card .meta{font-size:0.75rem;color:var(--graphite);margin-top:0.2rem;font-family:var(--mono);}
+.driver-delete{background:none;border:1px solid rgba(193,68,14,0.25);color:var(--rust);font-size:0.75rem;cursor:pointer;padding:0.25rem 0.6rem;border-radius:6px;transition:background .1s;}
+.driver-delete:hover{background:#fbe7de;}
+.request-card{border-left:3px solid var(--amber);}
+.request-card.fulfilled{border-left-color:var(--teal);}
+.request-card.dismissed{border-left-color:var(--rust);opacity:0.6;}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="topbar"><div class="brand"><span class="dot"></span>BusGo <span style="color:#9AA3C0;font-weight:500;font-size:0.9em;">Admin</span></div><div id="topbarRight" class="who"></div></div>
+<div class="route-strip"></div>
+<div class="content">
+
+<div id="view-auth">
+<div class="admin-login-wrap">
+<div class="admin-login-brand">
+  <div class="admin-login-icon">🔐</div>
+  <div class="h1">Admin sign in</div>
+  <p class="sub">Manage buses, drivers &amp; students.</p>
+</div>
+<div id="authError"></div>
+<form id="loginForm" class="admin-login-card">
+  <div class="field"><label>Username</label><input type="text" id="loginUser" required placeholder="admin" autocomplete="username"></div>
+  <div class="field" style="margin-bottom:1.1rem;"><label>Password</label><input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password"></div>
+  <button type="submit" class="btn-ink">Sign in →</button>
+</form>
+<div class="demo-note">Demo credentials &nbsp;·&nbsp; <b>admin</b> / <b>admin123</b></div>
+</div>
+</div>
+
+<div id="view-dashboard" style="display:none;">
+<div class="admin-hero">
+  <div class="greet">Admin Dashboard</div>
+  <div class="hero-sub">Buses · Drivers · Students · Requests</div>
+  <div class="admin-stat-row">
+    <div class="admin-stat"><div class="num" id="statBuses">0</div><div class="lbl">Active buses</div></div>
+    <div class="admin-stat"><div class="num" id="statBooked">0</div><div class="lbl">Seats booked</div></div>
+    <div class="admin-stat"><div class="num" id="statRevenue">₦0</div><div class="lbl">Revenue</div></div>
+    <div class="admin-stat"><div class="num" id="statStudents">0</div><div class="lbl">Students</div></div>
+  </div>
+</div>
+<div class="admin-tabs">
+<button id="tabBuses" class="active">Buses</button>
+<button id="tabDrivers">Drivers</button>
+<button id="tabRequests">Requests <span id="reqBadge" class="badge"></span></button>
+<button id="tabStudents">Students</button>
+</div>
+
+<div id="busesTab">
+<div class="create-card">
+<div class="ttl">+ Add a new bus</div>
+      <form id="createBusForm">
+        <div class="field"><label>Travel day</label><input type="date" id="busDay" required></div>
+        <div class="field"><label>Plate number</label><input type="text" id="busPlate" required placeholder="AUL 204 XY"></div>
+        <div class="field"><label>From</label><input type="text" id="busFrom" required placeholder="Lagos"></div>
+        <div class="field"><label>To</label><input type="text" id="busTo" required placeholder="Ibadan"></div>
+        <div class="field"><label>Service type</label><select id="busType"><option value="passengers">Passengers only</option><option value="goods">Goods / luggage only</option><option value="both">Passengers + goods</option></select></div>
+        <div class="btn-row">
+          <div class="field" style="flex:1;"><label>Capacity</label><input type="number" id="busCapacity" required min="1" value="14"></div>
+          <div class="field" style="flex:1;"><label>Passenger fare (&#8358;)</label><input type="number" id="busPrice" required min="0" value="3500"></div>
+        </div>
+        <div class="btn-row">
+          <div class="field" style="flex:1;"><label>Goods fare (&#8358;)</label><input type="number" id="busGoodsPrice" min="0" value="1500"></div>
+          <div class="field" style="flex:1;"><label>Route note</label><input type="text" id="busDescription" placeholder="Direct route, luggage allowed, etc."></div>
+        </div>
+        <button type="submit" class="btn btn-amber">Add bus</button>
+      </form>
+    </div>
+    <div class="section-label" style="margin-top:0;">Buses &amp; passenger lists</div>
+    <div id="busList"></div>
+
+  </div>
+
+  <div id="busModalBackdrop" class="modal-backdrop" style="display:none;"><div class="modal" id="busModal"></div></div>
+
+  <div id="driversTab" style="display:none;">
+    <div class="create-card">
+      <div class="ttl">Register a driver</div>
+      <p class="sub" style="margin-bottom:0.8rem;">Create a driver account so they can sign in on the Driver portal and see their passenger list.</p>
+      <form id="createDriverForm">
+        <div class="field"><label>Driver's full name</label><input type="text" id="driverName" required placeholder="e.g. Emeka Okafor"></div>
+        <div class="field"><label>Assigned bus plate number</label><select id="driverPlate" required><option value="">&mdash; Select a bus &mdash;</option></select></div>
+        <div class="field"><label>Set a password for the driver</label><input type="text" id="driverPassword" required placeholder="e.g. driver123" value="driver123"></div>
+        <button type="submit" class="btn btn-amber">Register driver</button>
+      </form>
+      <div id="driverCreateMsg" style="margin-top:0.6rem;"></div>
+    <div class="section-label" style="margin-top:0;">Registered drivers</div>
+    <div id="driverList"></div>
+  </div>
+
+  <div id="requestsTab" style="display:none;">
+    <div class="section-label" style="margin-top:0;">Day requests from students</div>
+    <div id="requestList"></div>
+  </div>
+
+  <div id="requestBusModalBackdrop" class="modal-backdrop" style="display:none;">
+    <div class="modal" id="requestBusModal">
+      <div class="modal-header"><div><div class="plate" style="font-size:1.1rem;">Add bus for <span id="reqModalDay"></span></div><div class="meta">Fill in the details to create a bus for this requested day.</div><button class="modal-close" id="reqModalCloseBtn">&times;</button></div>
+      <form id="requestBusForm">
+        <div class="field"><label>Plate number</label><input type="text" id="reqModalPlate" required placeholder="AUL 204 XY"></div>
+        <div class="btn-row">
+          <div class="field" style="flex:1;"><label>Capacity</label><input type="number" id="reqModalCapacity" required min="1" value="14"></div>
+          <div class="field" style="flex:1;"><label>Price (&#8358;)</label><input type="number" id="reqModalPrice" required min="0" value="3500"></div>
+        <div class="btn-row"><button type="submit" class="btn btn-amber">Create bus</button><button type="button" class="btn btn-ghost" id="reqModalCancel">Cancel</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="studentsTab" style="display:none;">
+    <div class="section-label" style="margin-top:0;">Registered students</div>
+    <div id="studentList"></div>
+  </div>
+
+</div>
+<footer class="disclaimer">Demo build &middot; fake data &middot; not a real payment</footer>
+</div>
+
+<script src="storage.js"></script>
+<script>
+var ADMIN_USER = 'admin';
+var ADMIN_PASS = 'admin123';
+
+function showView(id){
+  var v = ['view-auth','view-dashboard'];
+  for(var i=0;i<v.length;i++){
+    document.getElementById(v[i]).style.display = (v[i]===id) ? 'block' : 'none';
+  }
+}
+
+function renderTopbar(){
+  var el = document.getElementById('topbarRight');
+  if (DB.isAdmin()){
+    el.innerHTML = '<button class="link" id="logoutBtn">Log out</button>';
+    document.getElementById('logoutBtn').onclick = function(){ DB.adminLogout(); init(); };
+  } else {
+    el.innerHTML = '<span class="tag">demo</span>';
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var u = document.getElementById('loginUser').value.trim();
+  var p = document.getElementById('loginPass').value;
+  if (u === ADMIN_USER && p === ADMIN_PASS){
+    DB.adminLogin();
+    init();
+  } else {
+    document.getElementById('authError').innerHTML = '<div class="error">Wrong username or password.</div>';
+  }
+});
+
+function activateTab(tab){
+  var tabs = {buses:'tabBuses',drivers:'tabDrivers',requests:'tabRequests',students:'tabStudents'};
+  var panels = {buses:'busesTab',drivers:'driversTab',requests:'requestsTab',students:'studentsTab'};
+  var keys = Object.keys(tabs);
+  for(var i=0;i<keys.length;i++){
+    var key = keys[i];
+    document.getElementById(tabs[key]).classList.toggle('active', key === tab);
+    document.getElementById(panels[key]).style.display = (key === tab) ? 'block' : 'none';
+  }
+  if (tab === 'drivers') renderDrivers();
+  if (tab === 'requests') renderRequests();
+  if (tab === 'students') renderStudents();
+}
+
+document.getElementById('tabBuses').onclick = function(){ activateTab('buses'); };
+document.getElementById('tabDrivers').onclick = function(){ activateTab('drivers'); };
+document.getElementById('tabRequests').onclick = function(){ activateTab('requests'); };
+document.getElementById('tabStudents').onclick = function(){ activateTab('students'); };
+
+document.getElementById('createBusForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  DB.createBus({
+    day: document.getElementById('busDay').value,
+    plate: document.getElementById('busPlate').value.trim(),
+    capacity: document.getElementById('busCapacity').value,
+    price: document.getElementById('busPrice').value,
+    from: document.getElementById('busFrom').value.trim(),
+    to: document.getElementById('busTo').value.trim(),
+    type: document.getElementById('busType').value,
+    goodsPrice: document.getElementById('busGoodsPrice').value,
+    description: document.getElementById('busDescription').value.trim()
+  });
+  e.target.reset();
+  document.getElementById('busCapacity').value = 14;
+  document.getElementById('busPrice').value = 3500;
+  document.getElementById('busGoodsPrice').value = 1500;
+  renderAll();
+});
+
+function renderStats(){
+  var buses = DB.getBuses();
+  var bookings = DB.getBookings();
+  var revenue = 0;
+  for(var i=0;i<bookings.length;i++){
+    if(bookings[i].paid) revenue += Number(bookings[i].amount);
+  }
+  document.getElementById('statBuses').textContent = buses.length;
+  document.getElementById('statBooked').textContent = bookings.length;
+  document.getElementById('statRevenue').textContent = DB.fmtMoney(revenue);
+  document.getElementById('statStudents').textContent = DB.getUsers().length;
+}
+
+function renderBuses(){
+  var buses = DB.getBuses().slice().sort(function(a,b){ return a.day.localeCompare(b.day); });
+  var container = document.getElementById('busList');
+  if (buses.length === 0){
+    container.innerHTML = '<div class="empty"><div class="big">&#128652;</div>No buses added yet &mdash; add one above.</div>';
+    return;
+  }
+  var html = '';
+  for(var i=0;i<buses.length;i++){
+    var bus = buses[i];
+    var bookings = DB.bookingsForBus(bus.id);
+    var left = DB.seatsLeft(bus);
+    var paidCount = 0;
+    for(var j=0;j<bookings.length;j++){ if(bookings[j].paid) paidCount++; }
+    var driver = DB.findDriverByPlate(bus.plate);
+    var serviceLabel = bus.type === 'goods' ? 'Goods' : bus.type === 'both' ? 'Passengers + goods' : 'Passengers';
+    html += '<div class="card bus-admin-card" data-openbus="' + bus.id + '">' +
+      '<div class="row1"><span class="plate">' + bus.plate + '</span><span class="price">' + DB.fmtMoney(bus.price) + '</span></div>' +
+      '<div class="meta">' + DB.fmtDay(bus.day) + ' &middot; ' + (bus.from || 'Route') + ' → ' + (bus.to || 'Route') + ' &middot; ' + serviceLabel + '</div>' +
+      '<div class="meta">' + left + ' of ' + bus.capacity + ' free &middot; ' + bookings.length + ' booked &middot; ' + paidCount + ' paid' +
+      (driver ? ' &middot; Driver: ' + driver.name : '') + '</div>';
+  }
+  container.innerHTML = html;
+  var cards = container.querySelectorAll('[data-openbus]');
+  for(var k=0;k<cards.length;k++){
+    cards[k].onclick = function(){ openBusModal(this.dataset.openbus); };
+  }
+}
+
+function openBusModal(busId){
+  var bus = DB.getBuses().find(function(b){ return b.id === busId; });
+  if (!bus) return;
+  var bookings = DB.bookingsForBus(bus.id);
+  var driver = DB.findDriverByPlate(bus.plate);
+  var serviceLabel = bus.type === 'goods' ? 'Goods' : bus.type === 'both' ? 'Passengers + goods' : 'Passengers';
+  var html = '';
+  html += '<div class="modal-header"><div><div class="plate" style="font-size:1.1rem;">' + bus.plate + '</div><div class="meta">' + DB.fmtDay(bus.day) + ' &middot; ' + (bus.from || 'Route') + ' → ' + (bus.to || 'Route') + ' &middot; ' + serviceLabel + ' &middot; ' + DB.fmtMoney(bus.price) + '/seat' + (driver ? ' &middot; Driver: ' + driver.name : '') + '</div><button class="modal-close" id="busModalCloseBtn">&times;</button></div>';
+  if (bus.description){ html += '<div class="sub" style="margin:0.7rem 0 0.4rem;">' + bus.description + '</div>'; }
+  if (bus.goodsPrice){ html += '<div class="meta" style="margin-bottom:0.8rem;">Goods fare: ' + DB.fmtMoney(bus.goodsPrice) + '</div>'; }
+  if (bookings.length === 0){
+    html += '<div class="sub" style="margin:1rem 0;">No bookings yet for this bus.</div>';
+  } else {
+    html += '<div style="margin:0.8rem 0 0.3rem;font-size:0.75rem;color:var(--graphite);font-weight:600;">' + bookings.length + ' passenger(s)</div>';
+    for(var i=0;i<bookings.length;i++){
+      var bk = bookings[i];
+      var user = DB.getUsers().find(function(u){ return u.id === bk.userId; });
+      html += '<div class="list-row"><div><div class="name">' + bk.userName + '</div><div class="meta">Seat ' + bk.seat + ' &middot; ' + DB.fmtMoney(bk.amount) + ' &middot; ' + (user ? user.email : '') + '</div><div class="meta">#' + bk.id.slice(-6).toUpperCase() + '</div></div><div style="display:flex;align-items:center;gap:0.4rem;"><span class="pill-toggle ' + (bk.paid ? 'paid' : 'pending') + '" data-booking="' + bk.id + '">' + (bk.paid ? 'Paid' : 'Pending') + '</span><button class="icon-btn" data-delbooking="' + bk.id + '">Delete</button></div></div>';
+    }
+  }
+  html += '<div style="margin-top:1rem;display:flex;gap:0.5rem;"><button class="btn btn-ghost" id="busModalDeleteBus" style="color:var(--rust);">Delete this bus</button></div>';
+  document.getElementById('busModal').innerHTML = html;
+  document.getElementById('busModalBackdrop').style.display = 'flex';
+
+  document.getElementById('busModalCloseBtn').onclick = function(){ document.getElementById('busModalBackdrop').style.display = 'none'; };
+  document.getElementById('busModalBackdrop').addEventListener('click', function(e){ if(e.target.id === 'busModalBackdrop') document.getElementById('busModalBackdrop').style.display = 'none'; });
+
+  document.getElementById('busModalDeleteBus').onclick = function(){
+    if (confirm('Delete bus ' + bus.plate + '? This will also remove all its bookings.')){
+      DB.deleteBus(bus.id);
+      document.getElementById('busModalBackdrop').style.display = 'none';
+      renderAll();
+    }
+  };
+
+  document.querySelectorAll('[data-booking]').forEach(function(el){
+    el.onclick = function(){
+      var bkId = this.dataset.booking;
+      var bk = DB.getBookings().find(function(b){ return b.id === bkId; });
+      if (bk){ DB.setPaid(bkId, !bk.paid); openBusModal(busId); renderAll(); }
+    };
+  });
+
+  document.querySelectorAll('[data-delbooking]').forEach(function(el){
+    el.onclick = function(e){
+      e.stopPropagation();
+      if (confirm('Remove this booking?')){
+        DB.removeBooking(this.dataset.delbooking);
+        openBusModal(busId);
+        renderAll();
+      }
+    };
+  });
+}
+
+function renderDrivers(){
+  var drivers = DB.getDrivers();
+  var container = document.getElementById('driverList');
+  if (drivers.length === 0){
+    container.innerHTML = '<div class="sub" style="margin:0.5rem 0;">No drivers registered yet.</div>';
+  } else {
+    container.innerHTML = '';
+    for(var i=0;i<drivers.length;i++){
+      var d = drivers[i];
+      var div = document.createElement('div');
+      div.className = 'driver-card';
+      div.innerHTML = '<div class="row1"><div><div class="name">' + d.name + '</div><div class="meta">' + d.plate + '</div></div><button class="driver-delete" data-did="' + d.id + '">Remove</button></div>';
+      container.appendChild(div);
+    }
+    container.querySelectorAll('[data-did]').forEach(function(btn){
+      btn.onclick = function(){
+        if (confirm('Remove this driver?')){
+          DB.removeDriver(this.dataset.did);
+          renderDrivers();
+          renderBuses();
+        }
+      };
+    });
+  }
+
+  // populate plate select for driver form
+  var sel = document.getElementById('driverPlate');
+  var buses = DB.getBuses();
+  var currentVal = sel.value;
+  sel.innerHTML = '<option value="">&mdash; Select a bus &mdash;</option>';
+  for(var i=0;i<buses.length;i++){
+    var b = buses[i];
+    var assigned = DB.findDriverByPlate(b.plate);
+    var opt = document.createElement('option');
+    opt.value = b.plate;
+    opt.textContent = b.plate + ' (' + DB.fmtDay(b.day) + ')' + (assigned ? ' [has driver]' : '');
+    if (!assigned) sel.appendChild(opt);
+  }
+  sel.value = currentVal;
+}
+
+document.getElementById('createDriverForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var name = document.getElementById('driverName').value.trim();
+  var plate = document.getElementById('driverPlate').value;
+  var password = document.getElementById('driverPassword').value.trim();
+  if (!plate){
+    document.getElementById('driverCreateMsg').innerHTML = '<div class="error">Please select a bus plate.</div>';
+    return;
+  }
+  DB.createDriver({ name: name, plate: plate, password: password });
+  e.target.reset();
+  document.getElementById('driverPassword').value = 'driver123';
+  document.getElementById('driverCreateMsg').innerHTML = '<div class="success">Driver ' + name + ' registered for ' + plate + '.</div>';
+  renderDrivers();
+  renderAll();
+});
+
+function renderRequests(){
+  var requests = DB.getRequests().slice().sort(function(a,b){ return a.day.localeCompare(b.day); });
+  var container = document.getElementById('requestList');
+  if (requests.length === 0){
+    container.innerHTML = '<div class="empty"><div class="big">&#9993;</div>No requests yet.</div>';
+    return;
+  }
+  var html = '';
+  for(var i=0;i<requests.length;i++){
+    var r = requests[i];
+    var statusLabel = r.status.charAt(0).toUpperCase() + r.status.slice(1);
+    var cardClass = 'card request-card';
+    if (r.status === 'fulfilled') cardClass += ' fulfilled';
+    else if (r.status === 'dismissed') cardClass += ' dismissed';
+    html += '<div class="' + cardClass + '" style="margin-bottom:0.7rem;"><div class="row1"><span class="name">' + r.userName + '</span><span class="status-chip ' + (r.status === 'fulfilled' ? 'open' : r.status === 'dismissed' ? 'full' : '') + '">' + statusLabel + '</span></div><div class="meta" style="margin-top:0.2rem;">' + DB.fmtDay(r.day) + (r.note ? ' &middot; ' + r.note : '') + '</div><div style="display:flex;gap:0.4rem;margin-top:0.6rem;">';
+    if (r.status === 'pending'){
+      html += '<button class="btn btn-amber" style="flex:1;font-size:0.8rem;padding:0.4rem 0.6rem;" data-fulfill="' + r.id + '">Create bus</button>';
+      html += '<button class="btn btn-ghost" style="flex:1;font-size:0.8rem;padding:0.4rem 0.6rem;" data-dismiss="' + r.id + '">Dismiss</button>';
+    }
+    html += '</div></div>';
+  }
+  container.innerHTML = html;
+
+  container.querySelectorAll('[data-fulfill]').forEach(function(btn){
+    btn.onclick = function(){
+      var requestId = this.dataset.fulfill;
+      var req = DB.getRequests().find(function(r){ return r.id === requestId; });
+      if (!req) return;
+      document.getElementById('reqModalDay').textContent = DB.fmtDay(req.day);
+      document.getElementById('reqModalPlate').value = '';
+      document.getElementById('reqModalCapacity').value = 14;
+      document.getElementById('reqModalPrice').value = 3500;
+      document.getElementById('requestBusModalBackdrop').style.display = 'flex';
+      document.getElementById('requestBusForm').onsubmit = function(e){
+        e.preventDefault();
+        DB.createBus({
+          day: req.day,
+          plate: document.getElementById('reqModalPlate').value.trim(),
+          capacity: document.getElementById('reqModalCapacity').value,
+          price: document.getElementById('reqModalPrice').value
+        });
+        DB.setRequestStatus(requestId, 'fulfilled');
+        document.getElementById('requestBusModalBackdrop').style.display = 'none';
+        renderAll();
+      };
+    };
+  });
+
+  container.querySelectorAll('[data-dismiss]').forEach(function(btn){
+    btn.onclick = function(){
+      var requestId = this.dataset.dismiss;
+      DB.setRequestStatus(requestId, 'dismissed');
+      renderRequests();
+      renderAll();
+    };
+  });
+}
+
+// request bus modal close
+document.getElementById('reqModalCloseBtn').onclick = function(){ document.getElementById('requestBusModalBackdrop').style.display = 'none'; };
+document.getElementById('requestBusModalBackdrop').addEventListener('click', function(e){ if(e.target.id === 'requestBusModalBackdrop') document.getElementById('requestBusModalBackdrop').style.display = 'none'; });
+document.getElementById('reqModalCancel').onclick = function(){ document.getElementById('requestBusModalBackdrop').style.display = 'none'; };
+
+function renderStudents(){
+  var users = DB.getUsers();
+  var container = document.getElementById('studentList');
+  if (users.length === 0){
+    container.innerHTML = '<div class="empty"><div class="big">&#128101;</div>No registered students yet.</div>';
+    return;
+  }
+  var html = '';
+  for(var i=0;i<users.length;i++){
+    var u = users[i];
+    var tickets = DB.bookingsForUser(u.id);
+    html += '<div class="list-row"><div><div class="name">' + u.name + '</div><div class="meta">' + u.email + ' &middot; ' + u.phone + ' &middot; ' + tickets.length + ' ticket(s)</div></div><button class="icon-btn" data-deluser="' + u.id + '">Remove</button></div>';
+  }
+  container.innerHTML = html;
+  container.querySelectorAll('[data-deluser]').forEach(function(btn){
+    btn.onclick = function(){
+      if (confirm('Remove this student and all their bookings?')){
+        DB.removeUser(this.dataset.deluser);
+        renderStudents();
+        renderAll();
+      }
+    };
+  });
+}
+
+function renderAll(){
+  if (!DB.isAdmin()) return;
+  renderStats();
+  renderBuses();
+  // status badge on requests tab
+  var pending = DB.getRequests().filter(function(r){ return r.status === 'pending'; }).length;
+  document.getElementById('reqBadge').textContent = pending > 0 ? pending : '';
+}
+
+function init(){
+  var today = DB.todayStr();
+  document.getElementById('busDay').min = today;
+  renderTopbar();
+  if (DB.isAdmin()){
+    showView('view-dashboard');
+    renderAll();
+    activateTab('buses');
+  } else {
+    showView('view-auth');
+  }
+}
+
+init();
+</script>
+</body>
+</html>

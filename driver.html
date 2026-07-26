@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BusGo Driver</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .driver-hero{
+    background:linear-gradient(135deg,var(--ink),#1a2d5a);
+    border-radius:18px;
+    padding:2rem 1.4rem 1.6rem;
+    margin-bottom:1.5rem;
+    color:var(--paper);
+    position:relative;
+    overflow:hidden;
+    text-align:center;
+  }
+  .driver-hero::after{
+    content:"🚌";
+    position:absolute;
+    right:-8px;
+    bottom:-12px;
+    font-size:5rem;
+    opacity:0.12;
+    transform:rotate(-12deg);
+  }
+  .driver-hero .greet{ font-size:1.3rem; font-weight:700; font-family:var(--display); }
+  .driver-hero .plate-big{ font-family:var(--mono); font-size:1.6rem; font-weight:700; color:var(--amber); margin:0.3rem 0 0.2rem; letter-spacing:0.05em; }
+  .driver-hero .sub{ color:#9AA3C0; font-size:0.85rem; margin-top:0.2rem; }
+
+  .info-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0.7rem; }
+  .info-card{
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:0.9rem 1rem;
+  }
+  .info-card .l{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--graphite); }
+  .info-card .v{ font-family:var(--mono); font-size:1.05rem; font-weight:600; color:var(--ink); margin-top:0.2rem; }
+
+  .passenger-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0.65rem 0; border-bottom:1px solid var(--line);
+  }
+  .passenger-row:last-child{ border-bottom:none; }
+  .passenger-row .name{ font-weight:600; font-size:0.92rem; }
+  .passenger-row .seat{ font-family:var(--mono); font-size:0.8rem; color:var(--teal); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>BusGo <span style="color:#9AA3C0; font-weight:500;">Driver</span></div>
+    <div id="topbarRight" class="who"></div>
+  </div>
+  <div class="route-strip"></div>
+
+  <div class="content">
+
+    <!-- ============ AUTH VIEW ============ -->
+    <div id="view-auth">
+      <div class="h1">Driver sign in</div>
+      <p class="sub">Use the credentials set by the admin — your name, plate number, and password.</p>
+      <div id="authError"></div>
+      <form id="loginForm" class="card">
+        <div class="field">
+          <label>Your name</label>
+          <input type="text" id="loginName" required placeholder="e.g. Emeka Okafor">
+        </div>
+        <div class="field">
+          <label>Bus plate number</label>
+          <input type="text" id="loginPlate" required placeholder="AUL 204 XY" style="text-transform:uppercase;">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="loginPass" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-amber">Sign in to your bus</button>
+      </form>
+    </div>
+
+    <!-- ============ DASHBOARD VIEW ============ -->
+    <div id="view-dashboard" style="display:none;">
+      <div class="driver-hero">
+        <div class="greet" id="driverGreet">Welcome, Driver! 🚌</div>
+        <div class="plate-big" id="driverPlate">AUL 000 XX</div>
+        <div class="sub">Your assigned bus — show this to passengers</div>
+      </div>
+
+      <div class="section-label">Your Bus Info</div>
+      <div class="info-grid" id="busInfoGrid">
+        <div class="info-card"><div class="l">Travel day</div><div class="v" id="infoDay">—</div></div>
+        <div class="info-card"><div class="l">Capacity</div><div class="v" id="infoCapacity">—</div></div>
+        <div class="info-card"><div class="l">Seats booked</div><div class="v" id="infoBooked">0</div></div>
+        <div class="info-card"><div class="l">Seats free</div><div class="v" id="infoFree">—</div></div>
+      </div>
+
+      <div class="section-label">Passenger List</div>
+      <div class="card" id="passengerList">
+        <div class="sub" style="margin:0;">Loading passenger info...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="disclaimer">Demo build · fake data · not a real payment</footer>
+</div>
+
+<script src="storage.js"></script>
+<script>
+function showView(id){
+  ['view-auth','view-dashboard'].forEach(v=>{
+    document.getElementById(v).style.display = (v===id) ? 'block' : 'none';
+  });
+}
+
+function renderTopbar(){
+  const el = document.getElementById('topbarRight');
+  if (DB.isDriverLoggedIn()){
+    el.innerHTML = `<button class="link" id="logoutBtn">Log out</button>`;
+    document.getElementById('logoutBtn').onclick = () => { DB.driverLogout(); init(); };
+  } else {
+    el.innerHTML = '<span class="tag">demo</span>';
+  }
+}
+
+/* ============ auth ============ */
+document.getElementById('loginForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('loginName').value.trim();
+  const plate = document.getElementById('loginPlate').value.trim().toUpperCase();
+  const pass = document.getElementById('loginPass').value;
+
+  const driver = DB.findDriverByCredentials(plate, pass);
+  if (!driver || driver.name.toLowerCase() !== name.toLowerCase()){
+    document.getElementById('authError').innerHTML = '<div class="error">No match. Check your name, plate number, and password — or ask the admin to set you up.</div>';
+    return;
+  }
+  DB.driverLogin(driver);
+  init();
+});
+
+/* ============ dashboard ============ */
+function renderDashboard(){
+  const driver = DB.currentDriver();
+  if (!driver) return;
+
+  document.getElementById('driverGreet').textContent = `Hey, ${driver.name}! 🚌`;
+  document.getElementById('driverPlate').textContent = driver.plate;
+
+  // Find the bus that matches this plate
+  const buses = DB.getBuses();
+  const bus = buses.find(b => b.plate.toUpperCase() === driver.plate);
+
+  if (!bus){
+    document.getElementById('infoDay').textContent = '—';
+    document.getElementById('infoCapacity').textContent = '—';
+    document.getElementById('infoBooked').textContent = '0';
+    document.getElementById('infoFree').textContent = '—';
+    document.getElementById('passengerList').innerHTML = '<div class="sub" style="margin:0;">No bus found with this plate number. Ask the admin to create one.</div>';
+    return;
+  }
+
+  document.getElementById('infoDay').textContent = DB.fmtDay(bus.day);
+  document.getElementById('infoCapacity').textContent = bus.capacity + ' seats';
+  const bookings = DB.bookingsForBus(bus.id);
+  const left = DB.seatsLeft(bus);
+  document.getElementById('infoBooked').textContent = bookings.length;
+  document.getElementById('infoFree').textContent = left + ' seat' + (left===1?'':'s');
+
+  if (bookings.length === 0){
+    document.getElementById('passengerList').innerHTML = '<div class="sub" style="margin:0;">No passengers have booked this bus yet.</div>';
+  } else {
+    document.getElementById('passengerList').innerHTML = bookings.map(bk => `
+      <div class="passenger-row">
+        <div>
+          <div class="name">${bk.userName}</div>
+          <div class="meta">Ticket #${bk.id.slice(-6).toUpperCase()} &middot; ${DB.fmtMoney(bk.amount)}</div>
+        </div>
+        <div class="seat">${bk.seat}</div>
+      </div>
+    `).join('');
+  }
+}
+
+/* ============ init ============ */
+function init(){
+  renderTopbar();
+  if (DB.isDriverLoggedIn()){
+    renderDashboard();
+    showView('view-dashboard');
+  } else {
+    showView('view-auth');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
+

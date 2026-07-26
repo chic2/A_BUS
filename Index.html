@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BusGo — Book Your Ride</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* ===== INDEX LOGIN POLISH ===== */
+.auth-brand{display:flex;flex-direction:column;align-items:center;padding:1.4rem 0 1rem;}
+.auth-brand .logo-mark{width:60px;height:60px;background:var(--ink);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:0.7rem;box-shadow:0 6px 20px rgba(22,33,62,0.2);}
+.auth-brand .h1{margin:0 0 0.2rem;}
+.auth-brand .sub{margin:0;font-size:0.85rem;}
+.auth-card{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:1.4rem 1.3rem 1.2rem;box-shadow:0 4px 18px rgba(22,33,62,0.06);}
+.auth-card .field input{background:#faf8f4;transition:border .15s,box-shadow .15s;}
+.auth-card .field input:focus{background:#fff;box-shadow:0 0 0 3px rgba(232,169,58,0.15);}
+.auth-card .field input::placeholder{color:#b0a99a;}
+/* ===== DASHBOARD HERO POLISH ===== */
+.hero{box-shadow:0 6px 24px rgba(22,33,62,0.16);}
+.hero .hi{font-size:1.25rem;}
+.hero .stat-row{gap:1.4rem;margin-top:1rem;}
+.hero .stat-item .num{font-size:1.3rem;}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>BusGo</div>
+    <div id="topbarRight" class="who"></div>
+  </div>
+  <div class="route-strip"></div>
+
+  <div class="content">
+
+    <!-- ============ AUTH VIEW ============ -->
+    <div id="view-auth">
+      <div class="auth-brand">
+        <div class="logo-mark">🚌</div>
+        <div class="h1">Book a safe ride</div>
+        <p class="sub">Demo booking experience for a transport business.</p>
+      </div>
+
+      <div class="tabs">
+        <button id="tabLogin" class="active">Log in</button>
+        <button id="tabSignup">Sign up</button>
+      </div>
+
+      <div id="authError"></div>
+
+      <!-- login form -->
+      <form id="loginForm" class="auth-card">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="loginEmail" required placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="field" style="margin-bottom:1.1rem;">
+          <label>Password</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary">Log in &rarr;</button>
+      </form>
+
+      <!-- signup form -->
+      <form id="signupForm" class="auth-card" style="display:none;">
+        <div class="field">
+          <label>Full name</label>
+          <input type="text" id="suName" required placeholder="Your full name" autocomplete="name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="suEmail" required placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Phone number</label>
+          <input type="tel" id="suPhone" required placeholder="080..." autocomplete="tel">
+        </div>
+        <div class="field" style="margin-bottom:1.1rem;">
+          <label>Password</label>
+          <input type="password" id="suPassword" required placeholder="••••••••" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-amber">Create account &rarr;</button>
+      </form>
+    </div>
+
+    <!-- ============ DASHBOARD VIEW ============ -->
+    <div id="view-dashboard" style="display:none;">
+      <!-- hero header -->
+      <div class="hero" id="heroArea">
+        <div class="hi" id="heroGreeting">Welcome back!</div>
+        <div class="sub">Search by route and date, then choose seats or cargo for your trip.</div>
+        <div class="stat-row">
+          <div class="stat-item"><span class="num" id="heroBuses">0</span><span class="lbl">Buses</span></div>
+          <div class="stat-item"><span class="num" id="heroTickets">0</span><span class="lbl">My tickets</span></div>
+        </div>
+      </div>
+
+      <div class="section-label">Plan your trip</div>
+      <div class="card search-card">
+        <form id="searchTripForm">
+          <div class="search-grid">
+            <div class="field">
+              <label>Pick up</label>
+              <select id="searchFrom"></select>
+            </div>
+            <div class="field">
+              <label>Destination</label>
+              <select id="searchTo"></select>
+            </div>
+            <div class="field">
+              <label>Depart date</label>
+              <input type="date" id="searchDay">
+            </div>
+            <div class="field">
+              <label>Service</label>
+              <select id="searchMode">
+                <option value="passengers">Passengers</option>
+                <option value="goods">Goods / luggage</option>
+                <option value="both">Both</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>People / bags</label>
+              <input type="number" id="searchPeople" min="1" value="1">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-amber">Search buses</button>
+        </form>
+      </div>
+
+      <div id="searchFeedback" class="sub"></div>
+      <div class="section-label">Available trips</div>
+      <div id="busList"></div>
+    </div>
+
+    <!-- ============ SEAT PICKER VIEW ============ -->
+    <div id="view-seats" style="display:none;">
+      <button class="btn-ghost btn" style="width:auto; margin-bottom:1rem;" id="backToDash">&larr; Back</button>
+      <div id="seatBusInfo" class="card"></div>
+
+      <div class="seat-legend">
+        <span><span class="legend-swatch" style="background:#E7E4D9;"></span>Available</span>
+        <span><span class="legend-swatch" style="background:var(--rust);"></span>Taken</span>
+        <span><span class="legend-swatch" style="background:var(--ink);"></span>Your pick</span>
+      </div>
+      <div id="seatGrid" class="seat-grid"></div>
+
+      <button id="payBtn" class="btn btn-amber" disabled>Select seats to continue</button>
+    </div>
+
+    <!-- ============ PAYMENT METHOD VIEW ============ -->
+    <div id="view-payment" style="display:none;">
+      <button class="btn-ghost btn" style="width:auto; margin-bottom:1rem;" id="backToSeats">&larr; Back to seats</button>
+      <div class="h1">Choose payment method</div>
+      <p class="sub">Select how you'd like to complete your booking.</p>
+
+      <div id="paymentSummary" class="card"></div>
+
+      <div class="pay-methods" id="payMethodList">
+        <div class="pay-method selected" data-method="bank">
+          <span class="icon">🏦</span>
+          <div class="info">
+            <div class="name">Pay with Bank Transfer</div>
+            <div class="desc">Transfer to our demo bank account</div>
+          </div>
+          <div class="radio"></div>
+        </div>
+        <div class="pay-method" data-method="card">
+          <span class="icon">💳</span>
+          <div class="info">
+            <div class="name">Pay with Card (Demo)</div>
+            <div class="desc">Fake payment — instantly confirmed</div>
+          </div>
+          <div class="radio"></div>
+        </div>
+      </div>
+
+      <div id="bankDetails" class="bank-details">
+        <div class="row"><span class="l">Bank</span><span class="v">GTBank</span></div>
+        <div class="row"><span class="l">Account name</span><span class="v">BusGo Transport Ltd</span></div>
+        <div class="row"><span class="l">Account number</span><span class="v">0123 456 7890</span></div>
+      </div>
+
+      <button id="confirmPayBtn" class="btn btn-amber">Confirm Payment</button>
+    </div>
+
+    <!-- ============ TICKET VIEW ============ -->
+    <div id="view-ticket" style="display:none;">
+      <div id="ticketBox"></div>
+      <button id="ticketDoneBtn" class="btn btn-primary">Done</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ FLOATING BUTTONS ============ -->
+<button class="fab secondary" id="fabTickets" style="display:none;" title="My Tickets">🎟</button>
+<button class="fab" id="fabRequest" style="display:none;" title="Request a day">+</button>
+
+<!-- ============ REQUEST DAY MODAL ============ -->
+<div id="requestModalBackdrop" class="modal-backdrop" style="display:none;">
+  <div class="modal" id="requestModal">
+    <div class="modal-header">
+      <div>
+        <div class="plate" style="font-size:1.1rem;">Request a travel day</div>
+        <div class="meta">Tell us which day you need and the admin will consider adding a bus.</div>
+      </div>
+      <button class="modal-close" id="reqModalCloseBtn">&times;</button>
+    </div>
+    <form id="requestDayForm">
+      <div class="field">
+        <label>Day you need</label>
+        <input type="date" id="reqDay" required>
+      </div>
+      <div class="field">
+        <label>Note (optional)</label>
+        <input type="text" id="reqNote" placeholder="e.g. going home after exams">
+      </div>
+      <button type="submit" class="btn btn-amber">Send request</button>
+      <div id="requestConfirm" style="margin-top:0.6rem;"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MY TICKETS MODAL ============ -->
+<div id="ticketsModalBackdrop" class="modal-backdrop" style="display:none;">
+  <div class="modal" id="ticketsModal">
+    <div class="modal-header">
+      <div>
+        <div class="plate" style="font-size:1.1rem;">My Tickets</div>
+        <div class="meta" id="ticketsCount">0 tickets</div>
+      </div>
+      <button class="modal-close" id="ticketsModalCloseBtn">&times;</button>
+    </div>
+    <div id="ticketsList"></div>
+  </div>
+</div>
+
+<footer class="disclaimer">Demo build · fake data · not a real payment</footer>
+
+<script src="storage.js"></script>
+<script>
+/* ============ state ============ */
+let selectedDay = null;
+let selectedBus = null;
+let selectedSeats = [];
+let pendingMethod = 'bank';
+
+/* ============ view switching ============ */
+function showView(id){
+  ['view-auth','view-dashboard','view-seats','view-payment','view-ticket'].forEach(v=>{
+    document.getElementById(v).style.display = (v===id) ? 'block' : 'none';
+  });
+  // Show/hide floating buttons
+  const showFab = id === 'view-dashboard';
+  document.getElementById('fabTickets').style.display = showFab ? 'flex' : 'none';
+  document.getElementById('fabRequest').style.display = showFab ? 'flex' : 'none';
+}
+
+function renderTopbar(){
+  const user = DB.currentUser();
+  const el = document.getElementById('topbarRight');
+  if (user){
+    el.innerHTML = `${user.name.split(' ')[0]} <button class="link" id="logoutBtn">Log out</button>`;
+    document.getElementById('logoutBtn').onclick = () => {
+      DB.logout();
+      init();
+    };
+  } else {
+    el.innerHTML = '<span class="tag">demo</span>';
+  }
+}
+
+/* ============ auth ============ */
+document.getElementById('tabLogin').onclick = () => {
+  document.getElementById('tabLogin').classList.add('active');
+  document.getElementById('tabSignup').classList.remove('active');
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('authError').innerHTML = '';
+};
+document.getElementById('tabSignup').onclick = () => {
+  document.getElementById('tabSignup').classList.add('active');
+  document.getElementById('tabLogin').classList.remove('active');
+  document.getElementById('signupForm').style.display = 'block';
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('authError').innerHTML = '';
+};
+
+document.getElementById('loginForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw = document.getElementById('loginPassword').value;
+  const user = DB.findUserByEmail(email);
+  if (!user || user.password !== pw){
+    document.getElementById('authError').innerHTML = '<div class="error">Email or password doesn\'t match. Try again, or sign up.</div>';
+    return;
+  }
+  DB.login(user);
+  init();
+});
+
+document.getElementById('signupForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('suName').value.trim();
+  const email = document.getElementById('suEmail').value.trim();
+  const phone = document.getElementById('suPhone').value.trim();
+  const password = document.getElementById('suPassword').value;
+
+  if (DB.findUserByEmail(email)){
+    document.getElementById('authError').innerHTML = '<div class="error">An account with that email already exists — try logging in instead.</div>';
+    return;
+  }
+  const user = DB.createUser({ name, email, phone, password });
+  DB.login(user);
+  init();
+});
+
+/* ============ request a day (modal) ============ */
+document.getElementById('fabRequest').onclick = () => {
+  openRequestModal();
+};
+
+function closeRequestModal(){
+  document.getElementById('requestModalBackdrop').style.display = 'none';
+}
+document.getElementById('reqModalCloseBtn').onclick = closeRequestModal;
+document.getElementById('requestModalBackdrop').addEventListener('click', (e) => {
+  if (e.target.id === 'requestModalBackdrop') closeRequestModal();
+});
+
+document.getElementById('requestDayForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const user = DB.currentUser();
+  const day = document.getElementById('reqDay').value;
+  const note = document.getElementById('reqNote').value.trim();
+
+  DB.createRequest({
+    userId: user.id,
+    userName: user.name,
+    userPhone: user.phone,
+    day, note
+  });
+
+  document.getElementById('requestConfirm').innerHTML =
+    `<div class="success">Sent! The admin will review this.</div>`;
+  setTimeout(() => { closeRequestModal(); }, 1200);
+});
+
+/* ============ my tickets modal ============ */
+document.getElementById('fabTickets').onclick = () => {
+  renderTicketsModal();
+  document.getElementById('ticketsModalBackdrop').style.display = 'flex';
+};
+
+document.getElementById('ticketsModalCloseBtn').onclick = () => {
+  document.getElementById('ticketsModalBackdrop').style.display = 'none';
+};
+document.getElementById('ticketsModalBackdrop').addEventListener('click', (e) => {
+  if (e.target.id === 'ticketsModalBackdrop') document.getElementById('ticketsModalBackdrop').style.display = 'none';
+});
+
+function renderTicketsModal(){
+  const user = DB.currentUser();
+  const mine = user ? DB.bookingsForUser(user.id) : [];
+  const container = document.getElementById('ticketsList');
+  document.getElementById('ticketsCount').textContent = mine.length + ' ticket' + (mine.length === 1 ? '' : 's');
+
+  if (mine.length === 0){
+    container.innerHTML = '<div class="empty"><div class="big">🎟</div>No tickets yet. Book a bus to see them here!</div>';
+    return;
+  }
+
+  // Group by bus
+  const grouped = {};
+  mine.forEach(bk => {
+    const bus = DB.getBuses().find(b => b.id === bk.busId);
+    if (!bus) return;
+    const key = bus.id;
+    if (!grouped[key]) grouped[key] = { bus, bookings: [] };
+    grouped[key].bookings.push(bk);
+  });
+
+  container.innerHTML = Object.values(grouped).map(g => {
+    const bus = g.bus;
+    const bookings = g.bookings;
+    const total = bookings.reduce((s, b) => s + Number(b.amount), 0);
+    const allPaid = bookings.every(b => b.paid);
+    return `
+      <div class="card" style="margin-bottom:0.8rem;">
+        <div class="row1">
+          <span class="plate">${bus.plate}</span>
+          <span class="status-chip ${allPaid ? 'open' : 'full'}">${allPaid ? 'Paid' : 'Pending'}</span>
+        </div>
+        <div class="meta" style="margin-top:0.4rem;">
+          ${DB.fmtDay(bus.day)} &middot; Seats: ${bookings.map(b => b.seat).join(', ')} &middot; ${DB.fmtMoney(total)}
+        </div>
+        ${bookings.map(b => `
+          <div class="ticket-mini" data-ticket="${b.id}">
+            <span class="icon">🎫</span>
+            <div class="info">
+              <div class="top">
+                <span class="plate">Seat ${b.seat}</span>
+                <span class="status-chip ${b.paid ? 'open' : 'full'}" style="font-size:0.6rem;">${b.paid ? 'Paid' : 'Pending'}</span>
+              </div>
+              <div class="bottom">Ticket #${b.id.slice(-6).toUpperCase()} &middot; ${DB.fmtMoney(b.amount)}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('[data-ticket]').forEach(el => {
+    el.onclick = () => {
+      document.getElementById('ticketsModalBackdrop').style.display = 'none';
+      showTicket(el.dataset.ticket);
+    };
+  });
+}
+
+/* ============ dashboard ============ */
+let currentSearch = { from: '', to: '', day: '', mode: 'passengers', people: 1 };
+let hasSearched = false;
+
+function populateSearchOptions(){
+  const locations = DB.allLocations();
+  const fill = (select, value) => {
+    const current = value || '';
+    select.innerHTML = '<option value="">Any place</option>' + locations.map(loc => `<option value="${loc}" ${current === loc ? 'selected' : ''}>${loc}</option>`).join('');
+  };
+  fill(document.getElementById('searchFrom'), currentSearch.from);
+  fill(document.getElementById('searchTo'), currentSearch.to);
+  document.getElementById('searchDay').value = currentSearch.day;
+  document.getElementById('searchMode').value = currentSearch.mode;
+  document.getElementById('searchPeople').value = currentSearch.people || 1;
+}
+
+function renderBusCard(bus, suggested){
+  const mode = currentSearch.mode || 'passengers';
+  const isGoodsMode = mode === 'goods' || (mode === 'both' && bus.type === 'goods');
+  const fare = isGoodsMode ? (bus.goodsPrice || bus.price) : bus.price;
+  const label = bus.type === 'goods' ? 'Goods' : bus.type === 'both' ? 'Passengers + goods' : 'Passengers';
+  const left = DB.seatsLeft(bus);
+  const full = left <= 0;
+  const pct = Math.min(100, Math.round(((bus.capacity-left)/bus.capacity)*100));
+  const availabilityText = isGoodsMode ? 'Cargo slot available' : `${left} seat${left === 1 ? '' : 's'} left`;
+  const badgeClass = suggested ? 'open' : (full ? 'full' : 'open');
+  return `<div class="bus-card ${suggested ? 'suggestion-card' : ''}" data-bus="${bus.id}" data-mode="${isGoodsMode ? 'goods' : 'passengers'}">
+    <div class="row1">
+      <span class="plate">${bus.plate}</span>
+      <span class="price">${DB.fmtMoney(fare)}</span>
+    </div>
+    <div class="meta">${DB.fmtDay(bus.day)} &middot; ${bus.from} → ${bus.to} &middot; ${label}</div>
+    <div class="meta" style="margin-top:0.35rem;">${bus.description || 'Direct route'}</div>
+    <div class="meta" style="margin-top:0.4rem;">${availabilityText}
+      <span class="status-chip ${badgeClass}" style="margin-left:0.4rem;">${suggested ? 'Suggested' : (full ? 'Full' : 'Open')}</span>
+    </div>
+    <div class="seat-bar ${full ? 'full' : ''}"><div style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+function openRequestModal(prefill = {}){
+  const modal = document.getElementById('requestModalBackdrop');
+  modal.style.display = 'flex';
+  const dayInput = document.getElementById('reqDay');
+  const noteInput = document.getElementById('reqNote');
+  if (prefill.day) dayInput.value = prefill.day;
+  if (prefill.note) noteInput.value = prefill.note;
+  dayInput.focus();
+}
+
+function renderDashboard(){
+  const user = DB.currentUser();
+
+  const buses = DB.getBuses();
+  const myTickets = user ? DB.bookingsForUser(user.id) : [];
+  document.getElementById('heroGreeting').textContent = `Hey, ${user.name.split(' ')[0]}! 👋`;
+  document.getElementById('heroBuses').textContent = buses.length;
+  document.getElementById('heroTickets').textContent = myTickets.length;
+
+  populateSearchOptions();
+
+  const busList = document.getElementById('busList');
+  const feedback = document.getElementById('searchFeedback');
+
+  if (!hasSearched) {
+    feedback.innerHTML = '<div class="sub">Search a route and date to see trips. If your date is missing, we will suggest other days and give you a request option.</div>';
+    busList.innerHTML = '<div class="empty"><div class="big">🔎</div>Search to see available trips for your route.</div>';
+    return;
+  }
+
+  const searchResults = DB.searchTrips(currentSearch);
+  const suggestedResults = (currentSearch.from && currentSearch.to)
+    ? DB.suggestedTrips(currentSearch.from, currentSearch.to, currentSearch.mode)
+    : [];
+
+  if (searchResults.length === 0) {
+    feedback.innerHTML = '<div class="error">No exact trip matched that route and date yet. Suggested days are shown below and you can also request this day.</div>';
+  } else {
+    feedback.innerHTML = '<div class="success">We found rides that fit your search. Pick one to continue.</div>';
+  }
+
+  if (searchResults.length === 0) {
+    if (suggestedResults.length === 0) {
+      busList.innerHTML = `
+        <div class="empty">
+          <div class="big">🚌</div>
+          No trip found yet for that route.
+          <div style="margin-top:0.7rem;">
+            <button class="btn btn-amber" id="requestSearchDayBtn">Request this day</button>
+          </div>
+        </div>`;
+      document.getElementById('requestSearchDayBtn').onclick = () => openRequestModal({
+        day: currentSearch.day || '',
+        note: `Request for ${currentSearch.from || 'this place'} to ${currentSearch.to || 'destination'}`
+      });
+    } else {
+      busList.innerHTML = `
+        <div class="card" style="margin-bottom:0.8rem;">
+          <div class="sub" style="margin-bottom:0.5rem;">No exact match for that day, but here are nearby options.</div>
+          <button class="btn btn-ghost" id="requestSearchDayBtn">Request this day</button>
+        </div>
+        ${suggestedResults.map(b => renderBusCard(b, true)).join('')}`;
+      document.getElementById('requestSearchDayBtn').onclick = () => openRequestModal({
+        day: currentSearch.day || '',
+        note: `Request for ${currentSearch.from || 'this place'} to ${currentSearch.to || 'destination'}`
+      });
+    }
+  } else {
+    busList.innerHTML = searchResults.map(b => renderBusCard(b, false)).join('');
+  }
+
+  busList.querySelectorAll('.bus-card').forEach(card => {
+    card.onclick = () => openSeatView(card.dataset.bus, card.dataset.mode || 'passengers');
+  });
+}
+
+document.getElementById('searchTripForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  currentSearch = {
+    from: document.getElementById('searchFrom').value,
+    to: document.getElementById('searchTo').value,
+    day: document.getElementById('searchDay').value,
+    mode: document.getElementById('searchMode').value,
+    people: Number(document.getElementById('searchPeople').value || 1)
+  };
+  hasSearched = true;
+  renderDashboard();
+});
+
+/* ============ seat picker ============ */
+let bookingMode = 'passengers';
+
+function openSeatView(busId, mode = 'passengers'){
+  selectedBus = DB.getBuses().find(b => b.id === busId);
+  bookingMode = mode;
+  selectedSeats = [];
+  if (!selectedBus) return;
+
+  const isGoods = bookingMode === 'goods' || selectedBus.type === 'goods' || (selectedBus.type === 'both' && bookingMode === 'goods');
+  const fare = isGoods ? (selectedBus.goodsPrice || selectedBus.price) : selectedBus.price;
+
+  document.getElementById('seatBusInfo').innerHTML = `
+    <div class="row1">
+      <span class="plate">${selectedBus.plate}</span>
+      <span class="price">${DB.fmtMoney(fare)}${isGoods ? '' : ' / seat'}</span>
+    </div>
+    <div class="meta">${DB.fmtDay(selectedBus.day)} &middot; ${selectedBus.from} → ${selectedBus.to} &middot; ${isGoods ? 'Cargo / luggage service' : `Passenger seats for ${currentSearch.people || 1} traveller${(currentSearch.people || 1) === 1 ? '' : 's'}`}</div>
+  `;
+  renderSeatGrid();
+  document.getElementById('payBtn').disabled = false;
+  document.getElementById('payBtn').textContent = isGoods ? `Continue — cargo slot (${DB.fmtMoney(fare)})` : 'Select seats to continue';
+  showView('view-seats');
+}
+
+function renderSeatGrid(){
+  const isGoods = bookingMode === 'goods' || selectedBus.type === 'goods' || (selectedBus.type === 'both' && bookingMode === 'goods');
+  const taken = DB.takenSeats(selectedBus.id);
+  const grid = document.getElementById('seatGrid');
+  const maxSeats = currentSearch.people || 1;
+  let html = '';
+
+  if (isGoods) {
+    const cargoSeat = 'CARGO';
+    const cls = selectedSeats.includes(cargoSeat) ? 'selected' : 'available';
+    html += `<div class="seat ${cls}" data-seat="${cargoSeat}">CARGO</div>`;
+  } else {
+    for (let i = 1; i <= selectedBus.capacity; i++){
+      const seatNum = 'S' + String(i).padStart(2,'0');
+      let cls = 'available';
+      if (taken.includes(seatNum)) cls = 'taken';
+      else if (selectedSeats.includes(seatNum)) cls = 'selected';
+      html += `<div class="seat ${cls}" data-seat="${seatNum}">${seatNum}</div>`;
+    }
+  }
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('.seat.available, .seat.selected').forEach(el => {
+    el.onclick = () => {
+      const seat = el.dataset.seat;
+      if (selectedSeats.includes(seat)) {
+        selectedSeats = selectedSeats.filter(s => s !== seat);
+      } else if (!isGoods && selectedSeats.length >= maxSeats) {
+        return;
+      } else {
+        selectedSeats = [...selectedSeats, seat];
+      }
+      renderSeatGrid();
+      const payBtn = document.getElementById('payBtn');
+      const count = selectedSeats.length;
+      payBtn.disabled = count === 0;
+      if (count === 0) {
+        payBtn.textContent = isGoods ? `Continue — cargo slot (${DB.fmtMoney(selectedBus.goodsPrice || selectedBus.price)})` : 'Select seats to continue';
+      } else {
+        const total = isGoods ? (selectedBus.goodsPrice || selectedBus.price) : count * selectedBus.price;
+        payBtn.textContent = isGoods ? `Continue — cargo slot (${DB.fmtMoney(total)})` : `Continue — ${count} seat${count > 1 ? 's' : ''} (${DB.fmtMoney(total)})`;
+      }
+    };
+  });
+}
+
+document.getElementById('backToDash').onclick = () => { renderDashboard(); showView('view-dashboard'); };
+document.getElementById('backToSeats').onclick = () => { showView('view-seats'); };
+
+document.getElementById('payBtn').onclick = () => {
+  if (selectedSeats.length === 0 || !selectedBus) return;
+  const isGoods = bookingMode === 'goods' || selectedBus.type === 'goods' || (selectedBus.type === 'both' && bookingMode === 'goods');
+  const count = selectedSeats.length;
+  const total = isGoods ? (selectedBus.goodsPrice || selectedBus.price) : count * selectedBus.price;
+  document.getElementById('paymentSummary').innerHTML = `
+    <div class="row1">
+      <span class="plate">${selectedBus.plate}</span>
+      <span class="price">${DB.fmtMoney(total)}</span>
+    </div>
+    <div class="meta">${isGoods ? 'Cargo / luggage booking' : `${count} seat${count > 1 ? 's' : ''}: ${selectedSeats.join(', ')}`} &middot; ${DB.fmtDay(selectedBus.day)}</div>
+  `;
+  pendingMethod = 'bank';
+  document.querySelectorAll('.pay-method').forEach(el => el.classList.toggle('selected', el.dataset.method === 'bank'));
+  document.getElementById('bankDetails').style.display = 'block';
+  showView('view-payment');
+};
+
+/* ============ payment method ============ */
+document.querySelectorAll('.pay-method').forEach(el => {
+  el.onclick = () => {
+    pendingMethod = el.dataset.method;
+    document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('bankDetails').style.display = pendingMethod === 'bank' ? 'block' : 'none';
+  };
+});
+
+document.getElementById('confirmPayBtn').onclick = () => {
+  if (selectedSeats.length === 0 || !selectedBus) return;
+  const user = DB.currentUser();
+  const isGoods = bookingMode === 'goods' || selectedBus.type === 'goods' || (selectedBus.type === 'both' && bookingMode === 'goods');
+  const bookings = DB.createMultipleBookings({
+    userId: user.id,
+    userName: user.name,
+    busId: selectedBus.id,
+    seats: selectedSeats,
+    amountPerSeat: isGoods ? (selectedBus.goodsPrice || selectedBus.price) : selectedBus.price,
+    kind: isGoods ? 'goods' : 'passengers',
+    note: isGoods ? 'Cargo / luggage booking' : 'Passenger booking'
+  });
+  showMultipleTickets(bookings, pendingMethod);
+};
+
+/* ============ ticket ============ */
+function showTicket(bookingId){
+  const booking = DB.getBookings().find(b => b.id === bookingId);
+  const bus = DB.getBuses().find(b => b.id === booking.busId);
+  const user = DB.currentUser();
+
+  document.getElementById('ticketBox').innerHTML = `
+    <div class="ticket">
+      <div class="notch left"></div><div class="notch right"></div>
+      <div class="brand-row">
+        <span class="name">BusGo Ticket</span>
+        <span class="badge ${booking.paid?'':'pending'}">${booking.paid?'CONFIRMED':'PENDING'}</span>
+      </div>
+      <div class="route-line">
+        <span class="stop"></span><span class="track"></span><span class="stop"></span>
+      </div>
+      <div class="ticket-grid">
+        <div><div class="k">Passenger</div><div class="v">${user.name}</div></div>
+        <div><div class="k">Seat</div><div class="v">${booking.seat}</div></div>
+        <div><div class="k">Bus plate</div><div class="v">${bus.plate}</div></div>
+        <div><div class="k">Travel day</div><div class="v">${DB.fmtDay(bus.day)}</div></div>
+        <div><div class="k">Amount</div><div class="v">${DB.fmtMoney(booking.amount)}</div></div>
+        <div><div class="k">Ticket ID</div><div class="v">${booking.id.slice(-6).toUpperCase()}</div></div>
+      </div>
+      <div class="perf">
+        <span>BUSGO &middot; DEMO</span>
+        <span>Show this to the driver</span>
+      </div>
+    </div>
+  `;
+  showView('view-ticket');
+}
+
+function showMultipleTickets(bookings, method){
+  const bus = DB.getBuses().find(b => b.id === bookings[0].busId);
+  const user = DB.currentUser();
+  const isGoods = bookings[0].kind === 'goods';
+  const total = bookings.reduce((sum, b) => sum + Number(b.amount), 0);
+  const methodLabel = method === 'bank' ? 'Bank Transfer' : 'Card (Demo)';
+  const driver = DB.findDriverByPlate(bus.plate);
+  const driverInfo = driver ? `<div><div class="k">Driver</div><div class="v">${driver.name}</div></div>` : '';
+
+  document.getElementById('ticketBox').innerHTML = `
+    <div class="ticket">
+      <div class="notch left"></div><div class="notch right"></div>
+      <div class="brand-row">
+        <span class="name">BusGo Ticket(s)</span>
+        <span class="badge">CONFIRMED</span>
+      </div>
+      <div class="route-line">
+        <span class="stop"></span><span class="track"></span><span class="stop"></span>
+      </div>
+      <div class="ticket-grid">
+        <div><div class="k">Passenger</div><div class="v">${user.name}</div></div>
+        <div><div class="k">${isGoods ? 'Cargo' : 'Seats'}</div><div class="v">${bookings.map(b => b.seat).join(', ')}</div></div>
+        <div><div class="k">Bus plate</div><div class="v">${bus.plate}</div></div>
+        <div><div class="k">Travel day</div><div class="v">${DB.fmtDay(bus.day)}</div></div>
+        <div><div class="k">Total amount</div><div class="v">${DB.fmtMoney(total)}</div></div>
+        <div><div class="k">Payment method</div><div class="v">${methodLabel}</div></div>
+        ${driverInfo}
+      </div>
+      <div class="perf">
+        <span>BUSGO &middot; DEMO</span>
+        <span>Show this to the driver</span>
+      </div>
+    </div>
+  `;
+  showView('view-ticket');
+}
+
+document.getElementById('ticketDoneBtn').onclick = () => { renderDashboard(); showView('view-dashboard'); };
+
+/* ============ init ============ */
+function init(){
+  document.getElementById('reqDay').min = DB.todayStr();
+  renderTopbar();
+  const user = DB.currentUser();
+  if (user){
+    renderDashboard();
+    showView('view-dashboard');
+  } else {
+    showView('view-auth');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
+
